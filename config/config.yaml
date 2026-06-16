@@ -1,0 +1,27 @@
+gemini:
+  model: "gemini-2.5-flash"
+
+agents:
+  temperatures:
+    agent1: 0.00
+    agent2: 0.05
+    agent3: 0.10
+    agent4: 0.15
+    agent5: 0.20
+
+classification:
+  threshold: 0.75
+
+storage:
+  uploads_dir: "storage/uploads"
+  json_dir: "storage/json"
+  excel_dir: "storage/excel"
+  review_queue_dir: "storage/review_queue"
+
+ray:
+  address: "local"
+  num_workers: 5
+
+ocr:
+  use_gpu: false
+  lang: "en"

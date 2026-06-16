@@ -1,0 +1,32 @@
+[
+  {
+    "id": "invoice",
+    "name": "Invoice",
+    "description": "Commercial documents issued by a seller to a buyer, relating to a sale transaction and indicating the products, quantities, and agreed prices."
+  },
+  {
+    "id": "bank_statement",
+    "name": "Bank Statement",
+    "description": "Official summaries of financial transactions occurring within a given period on a bank account held by a person or business."
+  },
+  {
+    "id": "aadhaar",
+    "name": "Aadhaar Card",
+    "description": "A 12-digit unique identity number that can be obtained voluntarily by residents or citizens of India, based on their biometric and demographic data."
+  },
+  {
+    "id": "pan_card",
+    "name": "PAN Card",
+    "description": "Permanent Account Number card, a unique ten-character alphanumeric identifier, issued by the Indian Income Tax Department."
+  },
+  {
+    "id": "passport",
+    "name": "Passport",
+    "description": "An official travel document issued by a government, certifying the holder's identity and citizenship."
+  },
+  {
+    "id": "insurance_document",
+    "name": "Insurance Document",
+    "description": "Official insurance policies, certificates, declarations, or agreements specifying terms and coverage details."
+  }
+]
