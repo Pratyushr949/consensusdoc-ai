@@ -88,10 +88,34 @@ def run_pipeline(pdf_path: str, document_id: str, filename: str) -> dict:
         for idx, page_obj in enumerate(pages, 1):
             # 2. OCR Engine
             raw_text = ocr_engine.extract_text(page_obj)
-            
+
+            print("=" * 50)
+            print("PAGE NUMBER:", idx)
+            print("RAW OCR TEXT:", repr(raw_text))
+            print("RAW TEXT LENGTH:", len(raw_text))
+            print("=" * 50)
+
             # 3. Text Preprocessing
             clean_text = preprocess_text(raw_text)
-            
+
+            print("PREPROCESSED TEXT:", repr(clean_text))
+            print("PREPROCESSED LENGTH:", len(clean_text))
+
+            # Skip blank/failed OCR pages safely
+            if not clean_text.strip():
+                print(f"Skipping page {idx} because OCR/preprocessing returned empty text")
+
+                page_records.append({
+                    "page_number": idx,
+                    "document_type": "unknown",
+                    "confidence": 0.0,
+                    "reasoning": "No text detected on page",
+                    "status": "Skipped Empty Page",
+                    "segment_id": None
+                })
+
+                continue
+
             # 4. Ray Parallel ADK Agents
             agent_outputs = classify_page(clean_text)
             

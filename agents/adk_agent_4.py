@@ -7,6 +7,9 @@ from google.adk import Agent
 from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.genai import types
+import uuid
+from dotenv import load_dotenv
+load_dotenv()
 
 INSTRUCTION = """You are an intelligent document classification agent. Your task is to analyze the provided text extracted from a single document page and classify it into exactly one of the following categories:
 - invoice
@@ -40,7 +43,7 @@ def load_model_name() -> str:
                 pass
     return "gemini-2.5-flash"
 
-def classify(text: str) -> dict:
+async def classify(text: str) -> dict:
     """
     Classifies the provided text using a Google ADK Agent with temperature 0.15.
     Returns:
@@ -77,30 +80,44 @@ def classify(text: str) -> dict:
         role="user",
         parts=[types.Part(text=text)]
     )
-    
+    session_id = str(uuid.uuid4())
+
+    print("Creating session")
+
+    await session_service.create_session(
+        app_name="consensus_doc_ai",
+        user_id="system",
+        session_id=session_id
+    )
+
     # Execute the runner
     try:
-        events = runner.run(
+        events = runner.run_async(
             user_id="system",
-            session_id="classification_session_4",
+            session_id=session_id,
             new_message=user_message
         )
         
         text_parts = []
-        for event in events:
-            if event.author == "model" and event.content:
+
+        async for event in events:
+
+            if event.content:
+
                 if event.content.parts:
+
                     for part in event.content.parts:
-                        if part.text:
+
+                        if hasattr(part, "text") and part.text:
                             text_parts.append(part.text)
-                            
+
         raw_response = "".join(text_parts).strip()
+
         if not raw_response:
-            raise ValueError("Empty response received from the agent.")
-            
+            raise ValueError("Empty response received from the agent.") 
     except Exception as e:
         raise RuntimeError(f"Agent execution failed: {str(e)}")
-
+                    
     # Parse and validate response
     clean_text = raw_response
     if clean_text.startswith("```"):

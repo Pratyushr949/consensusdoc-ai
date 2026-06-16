@@ -2,7 +2,7 @@ import yaml
 from pathlib import Path
 from backend.human_review_queue import add_to_queue
 
-DEFAULT_THRESHOLD = 0.75
+DEFAULT_THRESHOLD = 0.90
 
 def check_threshold_and_route(
     document_id: str,

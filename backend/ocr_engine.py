@@ -1,7 +1,23 @@
+import os
+os.environ["FLAGS_use_onednn"] = "0"
 import numpy as np
 import pdfplumber
 import yaml
 from pathlib import Path
+
+# Monkeypatch re.sub to support variable-width look-behinds (?<=^|\s) on Python 3.11
+import re
+_orig_sub = re.sub
+def _custom_sub(pattern, repl, string, count=0, flags=0):
+    if isinstance(pattern, str) and '(?<=^|\\s)' in pattern:
+        p1 = pattern.replace('(?<=^|\\s)', '(?<=^)')
+        p2 = pattern.replace('(?<=^|\\s)', '(?<=\\s)')
+        string = _orig_sub(p1, repl, string, count, flags)
+        string = _orig_sub(p2, repl, string, count, flags)
+        return string
+    return _orig_sub(pattern, repl, string, count, flags)
+re.sub = _custom_sub
+
 from paddleocr import PaddleOCR
 
 class OCREngine:
@@ -38,12 +54,15 @@ class OCREngine:
     def ocr_instance(self) -> PaddleOCR:
         if self._ocr is None:
             # Lazy initialize the PaddleOCR model to optimize startup time and memory
-            self._ocr = PaddleOCR(
-                use_angle_cls=True,
-                lang=self.lang,
-                use_gpu=self.use_gpu,
-                show_log=False
-            )
+            try:
+                self._ocr = PaddleOCR(
+                    use_angle_cls=True,
+                    lang=self.lang,
+                    use_gpu=self.use_gpu,
+                    show_log=True
+                )
+            except Exception as e:
+                raise RuntimeError(f"OCR initialization failed: {str(e)}")
         return self._ocr
 
     def extract_text(self, page: pdfplumber.page.Page) -> str:

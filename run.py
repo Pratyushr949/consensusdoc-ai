@@ -4,7 +4,9 @@ import yaml
 from pathlib import Path
 import uvicorn
 import ray
+from dotenv import load_dotenv
 
+load_dotenv()
 def validate_folders(config: dict) -> None:
     """
     Validates and creates storage folders required by the classification pipeline.

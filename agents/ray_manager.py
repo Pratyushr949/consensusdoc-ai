@@ -42,26 +42,33 @@ def initialize_ray():
                 # Fallback to local execution if connecting to remote cluster fails
                 ray.init(ignore_reinit_error=True)
 
+import asyncio
+
 # Define Ray remote task wrappers for the 5 agents
 @ray.remote
 def run_agent_1(text: str) -> dict:
-    return agents.adk_agent_1.classify(text)
+    import asyncio
+    return asyncio.run(agents.adk_agent_1.classify(text))
 
 @ray.remote
 def run_agent_2(text: str) -> dict:
-    return agents.adk_agent_2.classify(text)
+    import asyncio
+    return asyncio.run(agents.adk_agent_2.classify(text))
 
 @ray.remote
 def run_agent_3(text: str) -> dict:
-    return agents.adk_agent_3.classify(text)
+    import asyncio
+    return asyncio.run(agents.adk_agent_3.classify(text))
 
 @ray.remote
 def run_agent_4(text: str) -> dict:
-    return agents.adk_agent_4.classify(text)
+    import asyncio
+    return asyncio.run(agents.adk_agent_4.classify(text))
 
 @ray.remote
 def run_agent_5(text: str) -> dict:
-    return agents.adk_agent_5.classify(text)
+    import asyncio
+    return asyncio.run(agents.adk_agent_5.classify(text))
 
 def classify_page(text: str) -> list:
     """
