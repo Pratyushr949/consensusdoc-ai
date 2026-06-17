@@ -2,6 +2,7 @@ import os
 import re
 import json
 import yaml
+import asyncio
 from pathlib import Path
 from google.adk import Agent
 from google.adk.runners import Runner
@@ -9,6 +10,7 @@ from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.genai import types
 import uuid
 from dotenv import load_dotenv
+from config.key_manager import get_api_key
 load_dotenv()
 
 INSTRUCTION = """You are an intelligent document classification agent. Your task is to analyze the provided text extracted from a single document page and classify it into exactly one of the following categories:
@@ -52,6 +54,7 @@ async def classify(text: str) -> dict:
     if not text.strip():
         raise ValueError("Cannot classify empty document text.")
 
+    os.environ["GOOGLE_API_KEY"] = get_api_key("agent_1")
     model_name = load_model_name()
     
     # Configure the agent
@@ -90,39 +93,59 @@ async def classify(text: str) -> dict:
         session_id=session_id
     )
 
-    # Execute the runner
-    try:
-        events = runner.run_async(
-            user_id="system",
-            session_id=session_id,
-            new_message=user_message
-        )
-        text_parts = []
+   # Execute runner with retry logic
 
-        async for event in events:
+    MAX_RETRIES = 3
 
-            # Do NOT check event.author == "model"
-            # because author is adk_agent_1
+    raw_response = None
 
-            if event.content:
+    for attempt in range(MAX_RETRIES):
 
-                if event.content.parts:
+        try:
 
-                    for part in event.content.parts:
+            print(f"Agent attempt {attempt+1}/{MAX_RETRIES}")
 
-                        if hasattr(part, "text") and part.text:
-                            text_parts.append(part.text)
+            events = runner.run_async(
+                user_id="system",
+                session_id=session_id,
+                new_message=user_message
+            )
 
-        raw_response = "".join(text_parts).strip()
+            text_parts = []
 
-        if not raw_response:
-            raise ValueError("Empty response received from the agent.")
-        
-                            
-        
-            
-    except Exception as e:
-        raise RuntimeError(f"Agent execution failed: {str(e)}")
+            async for event in events:
+
+                if event.content:
+
+                    if event.content.parts:
+
+                        for part in event.content.parts:
+
+                            if hasattr(part, "text") and part.text:
+                                text_parts.append(part.text)
+
+            raw_response = "".join(text_parts).strip()
+
+            if not raw_response:
+                raise ValueError("Empty response received from agent")
+
+            break
+
+        except Exception as e:
+
+            print(f"Attempt {attempt+1} failed: {str(e)}")
+
+            if attempt < MAX_RETRIES - 1:
+
+                print("Retrying in 5 seconds...")
+
+                await asyncio.sleep(5)
+
+            else:
+
+                raise RuntimeError(
+                    f"Agent failed after {MAX_RETRIES} attempts: {str(e)}"
+            )
 
     # Parse and validate response
     clean_text = raw_response

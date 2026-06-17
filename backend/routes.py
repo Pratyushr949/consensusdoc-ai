@@ -5,7 +5,7 @@ import yaml
 from pathlib import Path
 from fastapi import APIRouter, File, UploadFile, HTTPException, status
 from fastapi.responses import FileResponse
-from backend.orchestrator import run_pipeline, execute_override
+from backend.orchestrator import run_pipeline, execute_override, ConsensusFailureError
 from backend.human_review_queue import load_queue
 
 router = APIRouter()
@@ -105,17 +105,48 @@ async def upload_pdf(file: UploadFile = File(...)):
             document_id=doc_id,
             filename=filename
         )
-    except Exception as e:
-        # Clean up saved file on processing failure
+    except ConsensusFailureError as e:
         if destination_path.exists():
             os.remove(destination_path)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Pipeline execution failed: {str(e)}"
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "status": "failed",
+                "successful_agents": e.successful_agents,
+                "failed_agents": e.failed_agents,
+                "message": f"Pipeline execution failed: {str(e)}"
+            }
+        )
+    except Exception as e:
+        if destination_path.exists():
+            os.remove(destination_path)
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "status": "failed",
+                "successful_agents": 0,
+                "failed_agents": 5,
+                "message": f"Pipeline execution failed: {str(e)}"
+            }
         )
 
+    successful_agents = pipeline_result.get("successful_agents", 5)
+    failed_agents = pipeline_result.get("failed_agents", 0)
+    
+    if failed_agents > 0:
+        status_val = "partial_success"
+        message_val = f"{failed_agents} agent{'s' if failed_agents > 1 else ''} failed but consensus completed"
+    else:
+        status_val = "success"
+        message_val = "File processed successfully."
+
     return {
-        "message": "File processed successfully.",
+        "status": status_val,
+        "successful_agents": successful_agents,
+        "failed_agents": failed_agents,
+        "message": message_val,
         "document_id": doc_id,
         "filename": unique_filename,
         "original_name": filename,

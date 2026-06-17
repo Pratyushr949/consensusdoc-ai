@@ -74,21 +74,28 @@ def classify_page(text: str) -> list:
     """
     Executes the 5 ADK agents in parallel using Ray to classify a single page of text.
     Returns:
-        list: A list of dict responses from the 5 agents.
+        list: A list of dict responses from the successful agents.
     """
     initialize_ray()
 
     # Launch Ray remote tasks in parallel
-    futures = [
-        run_agent_1.remote(text),
-        run_agent_2.remote(text),
-        run_agent_3.remote(text),
-        run_agent_4.remote(text),
-        run_agent_5.remote(text)
-    ]
+    futures_map = {
+        "Agent 1": run_agent_1.remote(text),
+        "Agent 2": run_agent_2.remote(text),
+        "Agent 3": run_agent_3.remote(text),
+        "Agent 4": run_agent_4.remote(text),
+        "Agent 5": run_agent_5.remote(text)
+    }
 
-    # Resolve and return all results synchronously (blocking until all complete)
-    try:
-        return ray.get(futures)
-    except Exception as e:
-        raise RuntimeError(f"Error during parallel Ray execution of classification agents: {str(e)}")
+    successful_results = []
+    for agent_name, future in futures_map.items():
+        try:
+            result = ray.get(future)
+            if isinstance(result, dict):
+                result["agent_name"] = agent_name
+            successful_results.append(result)
+        except Exception as e:
+            print(f"[{agent_name}] execution failed: {str(e)}")
+            continue
+
+    return successful_results

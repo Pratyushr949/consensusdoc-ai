@@ -9,8 +9,8 @@ def aggregate_reasoning(agent_outputs: list[dict], winning_category: str) -> str
     winning_reasons = []
     dissent_reasons = []
     
-    for idx, out in enumerate(agent_outputs, 1):
-        agent_name = f"Agent {idx}"
+    for out in agent_outputs:
+        agent_name = out.get("agent_name", "Unknown Agent")
         reason = out.get("reasoning", "").strip()
         cat = out.get("document_type")
         conf = out.get("confidence", 0.0)

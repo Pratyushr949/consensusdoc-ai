@@ -1,5 +1,11 @@
 from pathlib import Path
 
+class ConsensusFailureError(Exception):
+    def __init__(self, message: str, successful_agents: int, failed_agents: int):
+        super().__init__(message)
+        self.successful_agents = successful_agents
+        self.failed_agents = failed_agents
+
 # Module imports for each pipeline stage
 # 1. PDF Splitter
 from backend.pdf_splitter import PDFSplitter
@@ -84,6 +90,9 @@ def run_pipeline(pdf_path: str, document_id: str, filename: str) -> dict:
     page_records = []
     has_flagged_pages = False
     
+    min_successful_agents = 5
+    max_failed_agents = 0
+    
     try:
         for idx, page_obj in enumerate(pages, 1):
             # 2. OCR Engine
@@ -118,6 +127,19 @@ def run_pipeline(pdf_path: str, document_id: str, filename: str) -> dict:
 
             # 4. Ray Parallel ADK Agents
             agent_outputs = classify_page(clean_text)
+            
+            successful_count = len(agent_outputs)
+            failed_count = 5 - successful_count
+            
+            if successful_count < 3:
+                raise ConsensusFailureError(
+                    f"Fewer than 3 agents succeeded (only {successful_count} succeeded).",
+                    successful_agents=successful_count,
+                    failed_agents=failed_count
+                )
+                
+            min_successful_agents = min(min_successful_agents, successful_count)
+            max_failed_agents = max(max_failed_agents, failed_count)
             
             # 5. Voting Engine
             winning_cat = determine_winning_category(agent_outputs)
@@ -154,7 +176,10 @@ def run_pipeline(pdf_path: str, document_id: str, filename: str) -> dict:
         splitter.close()
         
     # Finalize outputs (Stages 11-14)
-    return finalize_pipeline_outputs(document_id, page_records, has_flagged_pages)
+    pipeline_result = finalize_pipeline_outputs(document_id, page_records, has_flagged_pages)
+    pipeline_result["successful_agents"] = min_successful_agents
+    pipeline_result["failed_agents"] = max_failed_agents
+    return pipeline_result
 
 def execute_override(
     document_id: str,
