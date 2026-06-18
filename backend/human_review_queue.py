@@ -92,3 +92,16 @@ def add_to_queue(
     
     queue.append(entry)
     save_queue(queue)
+
+
+def remove_from_queue(document_id: str, page_number: int) -> None:
+    """
+    Removes a page entry from the JSON queue persistence layer.
+    """
+    queue = load_queue()
+    new_queue = [
+        item for item in queue 
+        if not (item["document_id"] == document_id and item["page_number"] == page_number)
+    ]
+    save_queue(new_queue)
+

@@ -4,13 +4,10 @@ import json
 import yaml
 import asyncio
 from pathlib import Path
-from google.adk import Agent
-from google.adk.runners import Runner
-from google.adk.sessions.in_memory_session_service import InMemorySessionService
-from google.genai import types
-import uuid
 from dotenv import load_dotenv
 from config.key_manager import get_api_key
+from config.llm_client import run_inference
+
 load_dotenv()
 
 INSTRUCTION = """You are an intelligent document classification agent. Your task is to analyze the provided text extracted from a single document page and classify it into exactly one of the following categories:
@@ -39,82 +36,40 @@ def load_model_name() -> str:
             try:
                 with open(p, "r") as f:
                     config = yaml.safe_load(f)
-                    if config and "gemini" in config and "model" in config["gemini"]:
-                        return config["gemini"]["model"]
+                    if config and "groq" in config and "model" in config["groq"]:
+                        return config["groq"]["model"]
             except Exception:
                 pass
-    return "gemini-2.5-flash"
+    return "llama-3.3-70b-versatile"
 
 async def classify(text: str) -> dict:
     """
-    Classifies the provided text using a Google ADK Agent with temperature 0.20.
+    Classifies the provided text using Groq with temperature 0.00.
     Returns:
         dict: {"document_type": str, "confidence": float, "reasoning": str}
     """
     if not text.strip():
         raise ValueError("Cannot classify empty document text.")
 
-    os.environ["GOOGLE_API_KEY"] = get_api_key("agent_5")
+    api_key = get_api_key("agent_5")
     model_name = load_model_name()
     
-    # Configure the agent
-    generate_content_config = types.GenerateContentConfig(
-        temperature=0.20,
-        response_mime_type="application/json"
-    )
-    
-    agent = Agent(
-        name="adk_agent_5",
-        model=model_name,
-        instruction=INSTRUCTION,
-        generate_content_config=generate_content_config
-    )
-    
-    # Initialize runner and session
-    session_service = InMemorySessionService()
-    runner = Runner(
-        app_name="consensus_doc_ai",
-        agent=agent,
-        session_service=session_service
-    )
-    
-    # Create the user message
-    user_message = types.Content(
-        role="user",
-        parts=[types.Part(text=text)]
-    )
-    session_id = str(uuid.uuid4())
-
-    print("Creating session")
-
-    await session_service.create_session(
-        app_name="consensus_doc_ai",
-        user_id="system",
-        session_id=session_id
-    )
-
-    # Execute the runner with retry logic
+    # Execute with retry logic
     MAX_RETRIES = 3
     raw_response = None
     for attempt in range(MAX_RETRIES):
         try:
             print(f"Agent attempt {attempt+1}/{MAX_RETRIES}")
-            events = runner.run_async(
-                user_id="system",
-                session_id=session_id,
-                new_message=user_message
+            raw_response = await asyncio.to_thread(
+                run_inference,
+                api_key,
+                INSTRUCTION,
+                text,
+                model_name
             )
-            
-            text_parts = []
-            async for event in events:
-                if event.content:
-                    if event.content.parts:
-                        for part in event.content.parts:
-                            if hasattr(part, "text") and part.text:
-                                text_parts.append(part.text)
-            raw_response = "".join(text_parts).strip()
             if not raw_response:
-                raise ValueError("Empty response received from the agent.")
+                raise ValueError("Empty response received from agent")
+            raw_response = raw_response.strip()
             break
         except Exception as e:
             print(f"Attempt {attempt+1} failed: {str(e)}")
@@ -122,8 +77,10 @@ async def classify(text: str) -> dict:
                 print("Retrying in 5 seconds...")
                 await asyncio.sleep(5)
             else:
-                raise RuntimeError(f"Agent failed after {MAX_RETRIES} attempts: {str(e)}")
-                        
+                raise RuntimeError(
+                    f"Agent failed after {MAX_RETRIES} attempts: {str(e)}"
+                )
+
     # Parse and validate response
     clean_text = raw_response
     if clean_text.startswith("```"):
