@@ -108,8 +108,7 @@ PDF Upload
 
 ---
 
-<p align="center">
-<img width="400" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3R2MjBwb2M4NmdwYTF5dWl5eWc4c2k3aTZ1aDV4c2o0aHduMm52YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/coxQHKASG60HrHtvkt/giphy.gif">
+
 </p>
 
 # Multi-Agent Consensus Architecture
