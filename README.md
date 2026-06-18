@@ -54,9 +54,7 @@ ConsensusDoc AI solves this problem by:
 
 ---
 
-<p align="center">
-<img width="750" src="https://media.giphy.com/media/juua9i2c2fA0AIp2iq/giphy.gif">
-</p>
+
 
 # System Architecture
 
