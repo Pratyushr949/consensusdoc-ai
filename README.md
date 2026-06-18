@@ -1,5 +1,20 @@
 # 🚀 ConsensusDoc AI
 
+<p align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=27&duration=2500&pause=800&color=00F7FF&center=true&vCenter=true&width=1000&lines=Enterprise+Grade+Document+Intelligence+Platform;5+Parallel+AI+Agents+Running+with+Ray;Groq+%2B+Llama+3.3+Powered+Consensus+Engine;Human+in+the+Loop+Verification+Architecture;Automated+JSON+%2B+Excel+Report+Generation" />
+</p>
+
+<p align="center">
+
+<img src="https://img.shields.io/badge/AI-Multi_Agent-blue?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/Backend-FastAPI-green?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/LLM-Llama_3.3-orange?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/API-Groq-red?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/Parallel-Ray-purple?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge"/>
+
+</p>
+
 Enterprise-grade intelligent document processing system for automated multi-page document classification using multi-agent AI consensus architecture.
 
 ---
@@ -20,12 +35,12 @@ The platform automatically detects document boundaries, groups related pages int
 
 In enterprise document processing pipelines, a single PDF often contains multiple document types such as:
 
-* Invoices
-* Bank Statements
-* Aadhaar Cards
-* PAN Cards
-* Passports
-* Insurance Documents
+* 📄 Invoices
+* 🏦 Bank Statements
+* 🪪 Aadhaar Cards
+* 💳 PAN Cards
+* 🌍 Passports
+* 🛡 Insurance Documents
 
 Traditional OCR systems process the entire PDF as one document.
 
@@ -38,6 +53,10 @@ ConsensusDoc AI solves this problem by:
 * Allowing manual human review when confidence is low
 
 ---
+
+<p align="center">
+<img width="750" src="https://media.giphy.com/media/juua9i2c2fA0AIp2iq/giphy.gif">
+</p>
 
 # System Architecture
 
@@ -91,6 +110,10 @@ PDF Upload
 
 ---
 
+<p align="center">
+<img width="400" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3R2MjBwb2M4NmdwYTF5dWl5eWc4c2k3aTZ1aDV4c2o0aHduMm52YSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/coxQHKASG60HrHtvkt/giphy.gif">
+</p>
+
 # Multi-Agent Consensus Architecture
 
 The system uses **5 parallel AI agents** running independently.
@@ -141,11 +164,11 @@ Voting Engine
 
 Benefits:
 
-* Reduced latency
-* Independent agent execution
-* Fault isolation
-* Scalable architecture
-* Parallel API utilization
+* ⚡ Reduced latency
+* ⚙ Independent agent execution
+* 🔒 Fault isolation
+* 📈 Scalable architecture
+* 🔄 Parallel API utilization
 
 ---
 
@@ -460,22 +483,26 @@ POST /api/users/login
 
 # Current Development Status
 
-| Module                   | Status                       |
-| ------------------------ | ---------------------------- |
-| Backend                  | Completed                    |
-| Multi-Agent Architecture | Completed                    |
-| OCR Pipeline             | Completed                    |
-| PDF Processing           | Completed                    |
-| Groq Migration           | Completed                    |
-| Human Review Workflow    | Completed                    |
-| JSON Generation          | Completed                    |
-| Excel Generation         | Completed                    |
-| Authentication Layer     | Completed (DB Setup Pending) |
-| Frontend Integration     | In Progress                  |
-| Role Based Access        | In Progress                  |
-| Deployment               | Pending                      |
+| Module                   | Status                          |
+| ------------------------ | ------------------------------- |
+| Backend                  | ✅ Completed                     |
+| Multi-Agent Architecture | ✅ Completed                     |
+| OCR Pipeline             | ✅ Completed                     |
+| PDF Processing           | ✅ Completed                     |
+| Groq Migration           | ✅ Completed                     |
+| Human Review Workflow    | ✅ Completed                     |
+| JSON Generation          | ✅ Completed                     |
+| Excel Generation         | ✅ Completed                     |
+| Authentication Layer     | 🟡 Completed (DB Setup Pending) |
+| Frontend Integration     | 🚧 In Progress                  |
+| Role Based Access        | 🚧 In Progress                  |
+| Deployment               | ⏳ Pending                       |
 
 ---
+
+<p align="center">
+  <img src="https://github-readme-stats.vercel.app/api?username=Pratyushr949&show_icons=true&theme=tokyonight" />
+</p>
 
 # Author
 
@@ -483,16 +510,16 @@ POST /api/users/login
 
 GitHub:
 
-[Pratyushr949 GitHub Profile](https://github.com/Pratyushr949?utm_source=chatgpt.com)
-
----
-
-# License
-
-MIT License
+https://github.com/Pratyushr949
 
 ---
 
 ## Project Vision
 
 Building enterprise-grade intelligent document processing systems using multi-agent AI consensus architecture with human-in-the-loop verification.
+
+---
+
+<p align="center">
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:0f0c29,50:302b63,100:24243e&height=120&section=footer"/>
+</p>
