@@ -1,4 +1,4 @@
-from backend.human_review_queue import load_queue, save_queue
+from backend.human_review_queue import load_queue, save_queue, remove_from_queue
 
 def override_classification(
     document_id: str,
@@ -12,18 +12,15 @@ def override_classification(
         bool: True if the entry was found and updated, False otherwise.
     """
     queue = load_queue()
-    updated = False
+    found = False
     
     for item in queue:
         if item["document_id"] == document_id and item["page_number"] == page_number:
-            item["document_type"] = selected_category
-            item["status"] = "Human Validated"
-            item["confidence"] = 1.0  # Force confidence to 100% upon human validation
-            updated = True
+            found = True
             break
             
-    if updated:
-        save_queue(queue)
+    if found:
+        remove_from_queue(document_id, page_number)
         return True
         
     return False

@@ -1,4 +1,4 @@
-# ConsensusDoc AI
+# 🚀 ConsensusDoc AI
 
 Enterprise-grade intelligent document processing system for automated multi-page document classification using multi-agent AI consensus architecture.
 
@@ -20,22 +20,22 @@ The platform automatically detects document boundaries, groups related pages int
 
 In enterprise document processing pipelines, a single PDF often contains multiple document types such as:
 
-- Invoices
-- Bank Statements
-- Aadhaar Cards
-- PAN Cards
-- Passports
-- Insurance Documents
+* Invoices
+* Bank Statements
+* Aadhaar Cards
+* PAN Cards
+* Passports
+* Insurance Documents
 
 Traditional OCR systems process the entire PDF as one document.
 
 ConsensusDoc AI solves this problem by:
 
-- Splitting PDF page-by-page
-- Classifying each page independently
-- Detecting boundaries between different document types
-- Grouping consecutive pages belonging to the same document
-- Allowing manual human review when confidence is low
+* Splitting PDF page-by-page
+* Classifying each page independently
+* Detecting boundaries between different document types
+* Grouping consecutive pages belonging to the same document
+* Allowing manual human review when confidence is low
 
 ---
 
@@ -56,7 +56,7 @@ PDF Upload
 3. Text Preprocessing
     │
     ▼
-4. 5 Parallel AI Agents (Google ADK + Gemini)
+4. 5 Parallel AI Agents (Groq + Llama 3.3)
     │
     ▼
 5. Voting Engine
@@ -97,15 +97,15 @@ The system uses **5 parallel AI agents** running independently.
 
 All agents perform identical classification tasks.
 
-Each agent runs with different temperature values to simulate reasoning diversity.
+Each agent uses an independent API key and runs in parallel using Ray distributed execution.
 
-| Agent | Model | Temperature |
-|---------|------|------------|
-| Agent 1 | Gemini | 0.00 |
-| Agent 2 | Gemini | 0.05 |
-| Agent 3 | Gemini | 0.10 |
-| Agent 4 | Gemini | 0.15 |
-| Agent 5 | Gemini | 0.20 |
+| Agent   | Model         | API            |
+| ------- | ------------- | -------------- |
+| Agent 1 | Llama 3.3 70B | Groq API Key 1 |
+| Agent 2 | Llama 3.3 70B | Groq API Key 2 |
+| Agent 3 | Llama 3.3 70B | Groq API Key 3 |
+| Agent 4 | Llama 3.3 70B | Groq API Key 4 |
+| Agent 5 | Llama 3.3 70B | Groq API Key 5 |
 
 Each agent returns:
 
@@ -119,15 +119,45 @@ Each agent returns:
 
 ---
 
+# Parallel Processing Engine
+
+ConsensusDoc AI uses **Ray Distributed Framework** for executing all AI agents concurrently.
+
+Workflow:
+
+```text
+Same OCR Text
+      │
+      ▼
+Agent 1 ─┐
+Agent 2 ─┤
+Agent 3 ─┼── Parallel Execution via Ray
+Agent 4 ─┤
+Agent 5 ─┘
+      │
+      ▼
+Voting Engine
+```
+
+Benefits:
+
+* Reduced latency
+* Independent agent execution
+* Fault isolation
+* Scalable architecture
+* Parallel API utilization
+
+---
+
 # Consensus Voting Engine
 
 All agent outputs are aggregated.
 
 Voting logic:
 
-- Maximum vote wins classification
-- Majority consensus determines final document type
-- All reasoning logs are aggregated
+* Maximum vote wins classification
+* Majority consensus determines final document type
+* All reasoning logs are aggregated
 
 Example:
 
@@ -233,12 +263,12 @@ config/categories.json
 
 Supported types:
 
-- invoice
-- bank_statement
-- aadhaar
-- pan_card
-- passport
-- insurance_document
+* invoice
+* bank_statement
+* aadhaar
+* pan_card
+* passport
+* insurance_document
 
 Each category contains:
 
@@ -285,6 +315,8 @@ project2/
 │
 ├── config/
 │   ├── config.yaml
+│   ├── key_manager.py
+│   ├── llm_client.py
 │   └── categories.json
 │
 ├── frontend/
@@ -311,45 +343,45 @@ project2/
 
 Backend:
 
-- Python
-- FastAPI
-- Uvicorn
+* Python
+* FastAPI
+* Uvicorn
 
 AI Layer:
 
-- Google ADK
-- Gemini API
-- Multi-Agent Architecture
+* Groq API
+* Llama 3.3 70B Versatile
+* Multi-Agent Consensus Architecture
 
 Parallel Execution:
 
-- Ray Framework
+* Ray Framework
 
 Document Processing:
 
-- pdfplumber
-- PaddleOCR
-- NumPy
+* pdfplumber
+* PaddleOCR
+* NumPy
 
 Database:
 
-- PostgreSQL
+* PostgreSQL
 
 Frontend:
 
-- React
-- Vite
-- Tailwind CSS
+* React
+* Vite
+* Tailwind CSS
 
 Export:
 
-- JSON
-- OpenPyXL Excel Generation
+* JSON
+* OpenPyXL Excel Generation
 
 Version Control:
 
-- Git
-- GitHub
+* Git
+* GitHub
 
 ---
 
@@ -367,55 +399,91 @@ GET /health
 POST /api/upload
 ```
 
+### Get Document Result
+
+```http
+GET /api/documents/{document_id}
+```
+
 ### Review Queue
 
 ```http
-GET /api/review
+GET /api/review-queue
 ```
 
 ### Manual Override
 
 ```http
-POST /api/override
+POST /api/review-queue/override
+```
+
+### Download JSON
+
+```http
+GET /api/documents/{document_id}/download/json
+```
+
+### Download Excel
+
+```http
+GET /api/documents/{document_id}/download/excel
+```
+
+### User Register
+
+```http
+POST /api/users/register
+```
+
+### User Login
+
+```http
+POST /api/users/login
 ```
 
 ---
 
 # Future Improvements
 
-- Authentication system
-- Role-based access control
-- Kubernetes deployment
-- Docker containerization
-- AWS deployment
-- Redis caching
-- Monitoring dashboard
-- Real-time document processing
+* Role-Based Access Control (Employee / Admin)
+* Employee Document Dashboard
+* Employee Override Workflow
+* Admin Audit Dashboard
+* Override History Tracking
+* PostgreSQL Production Integration
+* Docker Containerization
+* Kubernetes Deployment
+* AWS Deployment
+* Real-time Monitoring Dashboard
 
 ---
 
 # Current Development Status
 
-| Module | Status |
-|---------|--------|
-| Backend | Completed |
-| Multi-Agent Architecture | Completed |
-| OCR Pipeline | Completed |
-| PDF Processing | Completed |
-| Human Review Workflow | In Progress |
-| Frontend Integration | In Progress |
-| Database Integration | In Progress |
-| Deployment | Pending |
+| Module                   | Status                       |
+| ------------------------ | ---------------------------- |
+| Backend                  | Completed                    |
+| Multi-Agent Architecture | Completed                    |
+| OCR Pipeline             | Completed                    |
+| PDF Processing           | Completed                    |
+| Groq Migration           | Completed                    |
+| Human Review Workflow    | Completed                    |
+| JSON Generation          | Completed                    |
+| Excel Generation         | Completed                    |
+| Authentication Layer     | Completed (DB Setup Pending) |
+| Frontend Integration     | In Progress                  |
+| Role Based Access        | In Progress                  |
+| Deployment               | Pending                      |
 
 ---
 
 # Author
 
-Pratyush Raj
+**Pratyush Raj**
 
 GitHub:
 
-https://github.com/Pratyushr949
+[Pratyushr949 GitHub Profile](https://github.com/Pratyushr949?utm_source=chatgpt.com)
 
 ---
 
