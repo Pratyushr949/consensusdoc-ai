@@ -35,3 +35,14 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-dark-border rounded-full hover:bg-gray-700;
 }
+
+/* Custom logo centerpiece animations */
+@keyframes gradient-flow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.animate-gradient-slow {
+  background-size: 200% 200%;
+  animation: gradient-flow 8s ease infinite;
+}
+

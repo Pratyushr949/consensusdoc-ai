@@ -1,7 +1,7 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create ENUM type for roles
+-- Create ENUM type for roles (supports employee and admin)
 CREATE TYPE user_role_enum AS ENUM ('employee', 'admin');
 
 -- 1. Users Table
@@ -51,3 +51,17 @@ CREATE TABLE override_audit (
 CREATE INDEX idx_docs_uploaded_by ON documents(uploaded_by);
 CREATE INDEX idx_doc_pages_doc ON document_pages(document_id);
 CREATE INDEX idx_override_audit_by ON override_audit(overridden_by);
+
+-- 5. Audit Logs Table
+CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    action VARCHAR(100) NOT NULL,
+    document_id VARCHAR(100),
+    page_number INTEGER,
+    old_value VARCHAR(255),
+    new_value VARCHAR(255),
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);

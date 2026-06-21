@@ -12,7 +12,8 @@ from sqlalchemy.orm import Session
 from backend.orchestrator import run_pipeline, execute_override, ConsensusFailureError
 from backend.human_review_queue import load_queue
 from backend.auth import get_db, get_current_user, RoleChecker
-from database.models import User, UserRole, Document, DocumentPage, OverrideAudit
+from database.models import User, UserRole, Document, DocumentPage, OverrideAudit, AuditLog
+from backend.audit_logger import log_document_upload, log_manual_override, log_classification_completion
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -82,6 +83,9 @@ async def upload_pdf(
     db: Session = Depends(get_db)
 ):
     """Accepts exactly one PDF file, validates it, saves it, and runs the classification pipeline."""
+    import time
+    start_time = time.time()
+    
     filename = file.filename or ""
     if not filename.lower().endswith(".pdf"):
         raise HTTPException(
@@ -115,6 +119,16 @@ async def upload_pdf(
 
     # Execute classification pipeline on the uploaded document
     doc_id = unique_filename.replace(".pdf", "")
+    
+    # Audit document upload
+    log_document_upload(
+        db=db,
+        user_id=str(current_user.id),
+        username=current_user.username,
+        document_id=doc_id,
+        filename=filename
+    )
+
     try:
         pipeline_result = run_pipeline(
             pdf_path=str(destination_path),
@@ -152,6 +166,15 @@ async def upload_pdf(
             db.add(db_page)
             
         db.commit()
+        
+        # Audit classification completion
+        elapsed = time.time() - start_time
+        log_classification_completion(
+            db=db,
+            document_id=doc_id,
+            final_status=status_val,
+            processing_time=elapsed
+        )
         
     except ConsensusFailureError as e:
         if destination_path.exists():
@@ -227,7 +250,7 @@ def list_documents(
                 original_name = pages[0].get("filename") if pages else file.name
                 
                 status_str = "Pending Review" if data.get("has_flagged_pages", False) else "Processed"
-                if any(p.get("status") == "Human Validated" for p in pages):
+                if any(p.get("status") in ["Human Validated", "overridden"] for p in pages):
                     status_str = "Human Validated"
                     
                 docs_list.append({
@@ -266,10 +289,22 @@ def get_document_results(
         raise HTTPException(status_code=500, detail=f"Failed to read results: {str(e)}")
 
 @router.get("/api/review-queue")
-def get_review_queue():
-    """Gets all page classifications currently pending human review from queue.json."""
+def get_review_queue(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Gets all page classifications currently pending human review from queue.json, respecting uploader ownership."""
     queue = load_queue()
-    return [item for item in queue if item.get("status") == "Pending Review"]
+    pending_items = [item for item in queue if item.get("status") == "Pending Review"]
+    
+    if current_user.role == UserRole.ADMIN:
+        return pending_items
+        
+    # For employees, filter queue items to return only those belonging to documents they uploaded
+    own_docs = db.query(Document).filter(Document.uploaded_by == current_user.id).all()
+    own_doc_ids = {d.document_id for d in own_docs}
+    
+    return [item for item in pending_items if item.get("document_id") in own_doc_ids]
 
 @router.post("/api/review-queue/override")
 def apply_override(
@@ -328,6 +363,16 @@ def apply_override(
             original_category=old_category,
             new_category=selected_category,
             user_id=current_user.id
+        )
+        
+        # Log to enterprise audit logs table
+        log_manual_override(
+            db=db,
+            user_id=str(current_user.id),
+            document_id=document_id,
+            page_number=page_number,
+            old_category=old_category,
+            new_category=selected_category
         )
         db.commit()
         
@@ -477,6 +522,16 @@ def my_override(
             new_category=req.selected_category,
             user_id=current_user.id
         )
+        
+        # Log to enterprise audit logs table
+        log_manual_override(
+            db=db,
+            user_id=str(current_user.id),
+            document_id=req.document_id,
+            page_number=req.page_number,
+            old_category=old_category,
+            new_category=req.selected_category
+        )
         db.commit()
         
         # 5. Trigger override execution & outputs regeneration
@@ -549,3 +604,41 @@ def get_override_history_admin(
             "timestamp": log.override_timestamp.isoformat()
         })
     return res
+
+@router.get("/api/admin/employees")
+def list_employees_admin(
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN])),
+    db: Session = Depends(get_db)
+):
+    """Returns a list of all registered employees in the system, restricted to administrators."""
+    users = db.query(User).filter(User.role == UserRole.EMPLOYEE).all()
+    return [
+        {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "created_at": user.created_at.isoformat() if user.created_at else None
+        }
+        for user in users
+    ]
+
+@router.get("/api/admin/audit-logs")
+def list_audit_logs_admin(
+    current_user: User = Depends(RoleChecker([UserRole.ADMIN])),
+    db: Session = Depends(get_db)
+):
+    """Returns a list of all system-wide audit logs, ordered by timestamp descending, restricted to administrators."""
+    logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).all()
+    return [
+        {
+            "id": log.id,
+            "user_id": log.user_id,
+            "action": log.action,
+            "document_id": log.document_id,
+            "page_number": log.page_number,
+            "old_value": log.old_value,
+            "new_value": log.new_value,
+            "timestamp": log.timestamp.isoformat()
+        }
+        for log in logs
+    ]

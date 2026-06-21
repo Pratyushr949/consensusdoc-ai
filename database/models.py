@@ -11,6 +11,11 @@ class Base(DeclarativeBase):
     pass
 
 class UserRole(str, enum.Enum):
+    """
+    ConsensusDoc AI User Roles for Role-Based Access Control (RBAC).
+    - EMPLOYEE: Can login, upload documents, view own uploads, and perform overrides.
+    - ADMIN: Full system oversight, employee user logs, and database audit trail views.
+    """
     EMPLOYEE = "Employee"
     ADMIN = "Admin"
 
@@ -142,3 +147,23 @@ class OverrideAudit(Base):
         nullable=False
     )
     reason: Mapped[Optional[str]] = mapped_column(Text)
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id: Mapped[str] = mapped_column(StringUUID, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[Optional[str]] = mapped_column(
+        StringUUID, 
+        ForeignKey("users.id", ondelete="SET NULL")
+    )
+    action: Mapped[str] = mapped_column(String(100), nullable=False)
+    document_id: Mapped[Optional[str]] = mapped_column(String(100))
+    page_number: Mapped[Optional[int]] = mapped_column(nullable=True)
+    old_value: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    new_value: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        default=datetime.utcnow, 
+        nullable=False
+    )

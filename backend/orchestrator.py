@@ -199,7 +199,7 @@ def execute_override(
     for record in page_records:
         if record["page_number"] == page_number:
             record["document_type"] = selected_category
-            record["status"] = "Human Validated"
+            record["status"] = "overridden"
             record["confidence"] = 1.0
             
     # Recalculate if there are still any pending reviews

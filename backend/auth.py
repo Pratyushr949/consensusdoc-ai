@@ -110,6 +110,7 @@ def get_current_user(
 class RoleChecker:
     """
     Role check dependency validator. Checks if current user possesses allowed privileges.
+    Protects admin routes and enforces access restrictions based on the user's role.
     """
     def __init__(self, allowed_roles: list[UserRole]):
         self.allowed_roles = allowed_roles

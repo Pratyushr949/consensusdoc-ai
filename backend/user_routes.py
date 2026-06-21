@@ -5,6 +5,7 @@ from pydantic import BaseModel, EmailStr
 from database.models import User, UserRole
 from backend.auth import get_db, get_current_user, RoleChecker
 from backend.security import get_password_hash, verify_password, create_access_token
+from backend.audit_logger import log_user_login
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
 
@@ -69,7 +70,9 @@ def login_user(
     """
     Standard OAuth2 compatible token login. Checks credentials and returns JWT.
     """
-    user = db.query(User).filter(User.username == form_data.username).first()
+    user = db.query(User).filter(
+        (User.username == form_data.username) | (User.email == form_data.username)
+    ).first()
     
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(
@@ -82,6 +85,9 @@ def login_user(
     access_token = create_access_token(
         data={"sub": str(user.id), "role": user.role.value}
     )
+
+    # Log user login audit trail
+    log_user_login(db, str(user.id), user.username)
 
     return {
         "access_token": access_token,

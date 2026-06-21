@@ -1,5 +1,7 @@
 import os
 os.environ["FLAGS_use_onednn"] = "0"
+os.environ["FLAGS_use_mkldnn"] = "0"
+os.environ["PADDLE_PDX_ENABLE_MKLDNN_BYDEFAULT"] = "0"
 import numpy as np
 import pdfplumber
 import yaml
@@ -58,8 +60,8 @@ class OCREngine:
                 self._ocr = PaddleOCR(
                     use_angle_cls=True,
                     lang=self.lang,
-                    use_gpu=self.use_gpu,
-                    show_log=True
+                    device="gpu" if self.use_gpu else "cpu",
+                    enable_mkldnn=False
                 )
             except Exception as e:
                 raise RuntimeError(f"OCR initialization failed: {str(e)}")
@@ -78,15 +80,23 @@ class OCREngine:
         img_np = np.array(pil_image)
 
         # Run OCR extraction
-        result = self.ocr_instance.ocr(img_np, cls=True)
+        try:
+            result = self.ocr_instance.predict(img_np)
+        except Exception:
+            result = self.ocr_instance.ocr(img_np)
 
         if not result or not result[0]:
             return ""
 
         text_lines = []
-        for line in result[0]:
-            # Extract text from the result structure: [geometry, (text_str, confidence_score)]
-            text = line[1][0]
-            text_lines.append(text)
+        if isinstance(result[0], dict):
+            text_lines = result[0].get('rec_texts', [])
+        else:
+            for line in result[0]:
+                if isinstance(line, (list, tuple)) and len(line) > 1 and isinstance(line[1], (list, tuple)):
+                    text = line[1][0]
+                    text_lines.append(text)
+                else:
+                    text_lines.append(str(line))
 
         return "\n".join(text_lines)
