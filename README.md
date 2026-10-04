@@ -499,15 +499,7 @@ POST /api/users/login
 
 
 
-# Author
 
-**Pratyush Raj**
-
-GitHub:
-
-https://github.com/Pratyushr949
-
----
 
 ## Project Vision
 
