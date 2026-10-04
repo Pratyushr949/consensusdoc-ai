@@ -497,9 +497,7 @@ POST /api/users/login
 
 ---
 
-<p align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=Pratyushr949&show_icons=true&theme=tokyonight" />
-</p>
+
 
 # Author
 
